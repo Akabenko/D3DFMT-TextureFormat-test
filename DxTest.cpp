@@ -1,4 +1,4 @@
-﻿
+
 //#define D3D_DISABLE_9EX
 
 #include <d3d9.h>
@@ -9,6 +9,7 @@
 #define D3DFMT_R2VB MAKEFOURCC('R', '2', 'V', 'B')
 #define D3DFMT_NVDB MAKEFOURCC('N', 'V', 'D', 'B')
 #define D3DFMT_NV_RESZ MAKEFOURCC('R', 'E', 'S', 'Z')
+#define D3DFMT_INST MAKEFOURCC('I', 'N', 'S', 'T')
 
 D3DFORMAT formats[] = {
     D3DFMT_R8G8B8,
@@ -115,7 +116,7 @@ D3DFORMAT formats[] = {
 
     (D3DFORMAT)D3DFMT_NVDB,
     (D3DFORMAT)D3DFMT_R2VB,
-    (D3DFORMAT)MAKEFOURCC('I', 'N', 'S', 'T'),
+    (D3DFORMAT)D3DFMT_INST,
     (D3DFORMAT)MAKEFOURCC('A', 'T', 'O', 'C'),
     (D3DFORMAT)MAKEFOURCC('S', 'S', 'A', 'A'),
     D3DFMT_RAWZ,
@@ -239,7 +240,7 @@ const char* D3DFormatToString(D3DFORMAT format)
         case MAKEFOURCC('D', 'F', '1', '6'): return "D3DFMT_ATI_DF16";
         case D3DFMT_NVDB: return "D3DFMT_NVDB";
         case D3DFMT_R2VB: return "D3DFMT_R2VB"; 
-        case MAKEFOURCC('I', 'N', 'S', 'T'): return "D3DFMT_INST";
+        case D3DFMT_INST: return "D3DFMT_INST";
         case MAKEFOURCC('A', 'T', 'O', 'C'): return "D3DFMT_ATOC";
         case MAKEFOURCC('S', 'S', 'A', 'A'): return "D3DFMT_SSAA";
         case MAKEFOURCC('R', 'A', 'W', 'Z'): return "D3DFMT_RAWZ";
@@ -323,6 +324,7 @@ bool ForceTypeSurface(D3DFORMAT m_ImageFormat)
         (m_ImageFormat == (D3DFORMAT)D3DFMT_R2VB) || // https://aras-p.info/texts/D3D9GPUHacks.html
         (m_ImageFormat == (D3DFORMAT)D3DFMT_NVDB) ||
         (m_ImageFormat == (D3DFORMAT)D3DFMT_NV_RESZ) ||
+        (m_ImageFormat == (D3DFORMAT)D3DFMT_INST) ||
         
         (m_ImageFormat == D3DFMT_UYVY) ||
         (m_ImageFormat == D3DFMT_YUY2) ||
@@ -337,11 +339,7 @@ void IsTextureFormatOk(D3DFORMAT TextureFormat, D3DFORMAT g_DeviceFormat, int nU
 
     if (TextureFormat == (D3DFORMAT)D3DFMT_R2VB)
     {
-        nUsage |= D3DUSAGE_DMAP; // https://userpages.cs.umbc.edu/olano/s2006c03/scheuermann.pdf
-        //nUsage |= D3DUSAGE_QUERY_VERTEXTEXTURE;
-        //nUsage |= D3DUSAGE_RENDERTARGET;
-        //nUsage |= D3DUSAGE_DEPTHSTENCIL;
-        //g_DeviceFormat = D3DFMT_D24X8;
+        //nUsage |= D3DUSAGE_DMAP; // https://userpages.cs.umbc.edu/olano/s2006c03/scheuermann.pdf
     }
 
     if (TextureFormat == (D3DFORMAT)D3DFMT_NV_RESZ)

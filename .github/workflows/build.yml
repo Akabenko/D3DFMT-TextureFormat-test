@@ -1,0 +1,29 @@
+name: Build DxTest
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+    
+    - name: Restore NuGet packages
+      run: nuget restore DxTest.sln
+    
+    - name: Build
+      run: msbuild DxTest.sln /p:Configuration=Release /p:Platform=x64
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: DxTest-Release
+        path: x64/Release/

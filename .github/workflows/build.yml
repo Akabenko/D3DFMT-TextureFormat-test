@@ -1,10 +1,9 @@
-name: Build DxTest
+name: Build and Release
 
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    tags: [ 'v*' ]
 
 jobs:
   build:
@@ -16,14 +15,21 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
     
-    - name: Restore NuGet packages
-      run: nuget restore DxTest.sln
-    
-    - name: Build
+    - name: Build Release
       run: msbuild DxTest.sln /p:Configuration=Release /p:Platform=x64
     
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+    - name: Find exe file
+      run: |
+        echo "Looking for exe files:"
+        dir *.exe /s /b
+        echo "Checking common paths:"
+        if exist x64\Release\DxTest.exe echo "Found: x64\Release\DxTest.exe"
+        if exist DxTest\x64\Release\DxTest.exe echo "Found: DxTest\x64\Release\DxTest.exe"
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
       with:
-        name: DxTest-Release
-        path: x64/Release/
+        files: |
+          x64/Release/DxTest.exe
+          DxTest/x64/Release/DxTest.exe

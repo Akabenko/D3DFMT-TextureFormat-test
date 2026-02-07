@@ -21,10 +21,10 @@ jobs:
     - name: Find exe file
       run: |
         echo "Looking for exe files:"
-        dir *.exe /s /b
+        Get-ChildItem -Recurse -Filter *.exe | ForEach-Object { $_.FullName }
         echo "Checking common paths:"
-        if (Test-Path "x64\Release\DxTest.exe") { echo "Found: x64\Release\DxTest.exe" }
-        if (Test-Path "DxTest\x64\Release\DxTest.exe") { echo "Found: DxTest\x64\Release\DxTest.exe" }
+        if (Test-Path "x64\Release\DxTest.exe") { Write-Host "Found: x64\Release\DxTest.exe" }
+        if (Test-Path "DxTest\x64\Release\DxTest.exe") { Write-Host "Found: DxTest\x64\Release\DxTest.exe" }
     
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')

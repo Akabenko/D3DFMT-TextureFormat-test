@@ -23,8 +23,8 @@ jobs:
         echo "Looking for exe files:"
         dir *.exe /s /b
         echo "Checking common paths:"
-        if exist x64\Release\DxTest.exe echo "Found: x64\Release\DxTest.exe"
-        if exist DxTest\x64\Release\DxTest.exe echo "Found: DxTest\x64\Release\DxTest.exe"
+        if (exist x64\Release\DxTest.exe) echo "Found: x64\Release\DxTest.exe"
+        if (exist DxTest\x64\Release\DxTest.exe) echo "Found: DxTest\x64\Release\DxTest.exe"
     
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')

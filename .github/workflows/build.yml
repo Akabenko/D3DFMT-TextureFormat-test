@@ -3,7 +3,11 @@ name: Build and Release
 on:
   push:
     branches: [ main, master ]
-    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  # Триггер релиза при создании тега
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -19,17 +23,73 @@ jobs:
       run: msbuild DxTest.sln /p:Configuration=Release /p:Platform=x64
     
     - name: Find exe file
+      id: find-exe
       run: |
-        echo "Looking for exe files:"
-        Get-ChildItem -Recurse -Filter *.exe | ForEach-Object { $_.FullName }
-        echo "Checking common paths:"
-        if (Test-Path "x64\Release\DxTest.exe") { Write-Host "Found: x64\Release\DxTest.exe" }
-        if (Test-Path "DxTest\x64\Release\DxTest.exe") { Write-Host "Found: DxTest\x64\Release\DxTest.exe" }
+        Write-Host "Looking for exe files..."
+        
+        # Проверяем возможные пути
+        $possiblePaths = @(
+          "x64\Release\DxTest.exe",
+          "DxTest\x64\Release\DxTest.exe",
+          "Release\x64\DxTest.exe",
+          "bin\x64\Release\DxTest.exe"
+        )
+        
+        $foundPath = $null
+        foreach ($path in $possiblePaths) {
+          if (Test-Path $path) {
+            Write-Host "✓ Found: $path"
+            $foundPath = $path
+            break
+          } else {
+            Write-Host "✗ Not found: $path"
+          }
+        }
+        
+        # Если не нашли по стандартным путям, ищем рекурсивно
+        if (-not $foundPath) {
+          Write-Host "Searching recursively..."
+          $exeFiles = Get-ChildItem -Recurse -Filter "*.exe" -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*DxTest*" }
+          
+          if ($exeFiles.Count -gt 0) {
+            $foundPath = $exeFiles[0].FullName
+            Write-Host "✓ Found recursively: $foundPath"
+          }
+        }
+        
+        if ($foundPath) {
+          # Сохраняем путь для output
+          echo "exe_path=$foundPath" >> $env:GITHUB_OUTPUT
+          # Копируем в корень для удобства
+          Copy-Item -Path $foundPath -Destination "DxTest.exe" -Force
+          Write-Host "Copied to: DxTest.exe"
+        } else {
+          Write-Error "No DxTest.exe found!"
+          exit 1
+        }
     
-    - name: Create Release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
       with:
+        name: DxTest
+        path: |
+          DxTest.exe
+          x64/Release/*.dll
+          DxTest/x64/Release/*.dll
+        if-no-files-found: warn
+    
+    # Создание релиза при пуше тега
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        name: Release ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true
         files: |
-          x64/Release/DxTest.exe
-          DxTest/x64/Release/DxTest.exe
+          DxTest.exe
+          README.md
+          LICENSE
